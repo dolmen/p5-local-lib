@@ -17,8 +17,6 @@ my $dir2 = tempdir('test_local_lib-XXXXX', DIR => Cwd::abs_path('t'), CLEANUP =>
 $dir2 = local::lib->ensure_dir_structure_for($dir2);
 
 my ($dir1_arch, $dir2_arch) = map { File::Spec->catfile($_, qw'lib perl5', $Config{archname}) } $dir1, $dir2;
-diag $dir1_arch;
-diag $dir2_arch;
 
 
 my $prev_active = () = local::lib->active_paths;
@@ -27,7 +25,6 @@ local::lib->import($dir1);
 is +() = local::lib->active_paths, $prev_active + 1, 'one active path';
 like $ENV{PERL_LOCAL_LIB_ROOT}, qr/\Q$dir1/, 'added one dir in root';
 like $ENV{PERL5LIB}, qr/\Q$dir1/, 'added one dir in lib';
-diag $ENV{PERL5LIB};
 unlike $ENV{PERL5LIB}, qr/\Q$dir1_arch/, 'no arch in PERL5LIB';
 like $ENV{PERL_MM_OPT}, qr/\Q$dir1/, 'first path is installation target';
 

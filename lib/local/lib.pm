@@ -417,7 +417,6 @@ sub build_activate_environment_vars_for {
     PERL5LIB =>
             _env_list_value(
               { interpolate => $interpolate, exists => 0, empty => '' },
-              $class->install_base_arch_path($path),
               $class->install_base_perl_path($path),
               \'PERL5LIB',
             ),

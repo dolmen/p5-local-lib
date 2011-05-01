@@ -2,9 +2,11 @@ use strict;
 use warnings;
 use Test::More;
 use File::Temp qw(tempdir);
+use File::Spec;
 use Cwd;
+use Config;
 
-plan tests => 19;
+plan tests => 24;
 
 use local::lib ();
 
@@ -14,12 +16,19 @@ $dir1 = local::lib->ensure_dir_structure_for($dir1);
 my $dir2 = tempdir('test_local_lib-XXXXX', DIR => Cwd::abs_path('t'), CLEANUP => 1);
 $dir2 = local::lib->ensure_dir_structure_for($dir2);
 
+my ($dir1_arch, $dir2_arch) = map { File::Spec->catfile($_, qw'lib perl5', $Config{archname}) } $dir1, $dir2;
+diag $dir1_arch;
+diag $dir2_arch;
+
+
 my $prev_active = () = local::lib->active_paths;
 
 local::lib->import($dir1);
 is +() = local::lib->active_paths, $prev_active + 1, 'one active path';
 like $ENV{PERL_LOCAL_LIB_ROOT}, qr/\Q$dir1/, 'added one dir in root';
 like $ENV{PERL5LIB}, qr/\Q$dir1/, 'added one dir in lib';
+diag $ENV{PERL5LIB};
+unlike $ENV{PERL5LIB}, qr/\Q$dir1_arch/, 'no arch in PERL5LIB';
 like $ENV{PERL_MM_OPT}, qr/\Q$dir1/, 'first path is installation target';
 
 local::lib->import($dir1);
@@ -29,8 +38,10 @@ local::lib->import($dir2);
 is +() = local::lib->active_paths, $prev_active + 2, 'two active paths';
 like $ENV{PERL_LOCAL_LIB_ROOT}, qr/\Q$dir2/, 'added another dir in root';
 like $ENV{PERL5LIB}, qr/\Q$dir2/, 'added another dir in lib';
+unlike $ENV{PERL5LIB}, qr/\Q$dir2_arch/, 'no arch in PERL5LIB';
 like $ENV{PERL_LOCAL_LIB_ROOT}, qr/\Q$dir1/, 'first dir is still in root';
 like $ENV{PERL5LIB}, qr/\Q$dir1/, 'first dir is still in lib';
+unlike $ENV{PERL5LIB}, qr/\Q$dir1_arch/, 'no arch in PERL5LIB';
 like $ENV{PERL_MM_OPT}, qr/\Q$dir2/, 'second path is installation target';
 
 local::lib->import($dir1);
@@ -42,6 +53,8 @@ like $ENV{PERL_MM_OPT}, qr/\Q$dir1/, 'first path is installation target again';
 local::lib->import('--deactivate', $dir2);
 unlike $ENV{PERL_LOCAL_LIB_ROOT}, qr/\Q$dir2/, 'second dir was removed from root';
 unlike $ENV{PERL5LIB}, qr/\Q$dir2/, 'second dir was removed from lib';
+unlike $ENV{PERL5LIB}, qr/\Q$dir2_arch/, 'no arch in PERL5LIB';
 like $ENV{PERL_LOCAL_LIB_ROOT}, qr/\Q$dir1/, q{first dir didn't go away from root};
 like $ENV{PERL5LIB}, qr/\Q$dir1/, q{first dir didn't go away from lib};
+unlike $ENV{PERL5LIB}, qr/\Q$dir1_arch/, 'no arch in PERL5LIB';
 like $ENV{PERL_MM_OPT}, qr/\Q$dir1/, 'first dir stays installation target';

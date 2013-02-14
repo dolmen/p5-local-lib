@@ -1,4 +1,9 @@
 Revision history for local::lib
+
+        - Fix $PATH regression since 1.008005: ~/perl5/bin was not added
+          (Olivier Mengué)
+        - Fix ->active_paths to remove empty paths
+
 1.008006 2013-02-12
 
         - Remove prototype on private function 
